@@ -8,7 +8,9 @@ pub struct SpriteKind {
 	pub key: String,
 	pub label: String,
 	pub file_name: String,
-	pub texture: Option<Texture2D>
+	pub texture: Option<Texture2D>,
+	pub width: f32,
+	pub height: f32
 }
 
 pub struct Physics {
@@ -65,6 +67,18 @@ pub struct Position {
 }
 
 #[derive(Component)]
+pub struct Center {
+	pub cx: f32,
+	pub cy: f32
+}
+
+#[derive(Component)]
+pub struct Size {
+	pub width: f32,
+	pub height: f32
+}
+
+#[derive(Component)]
 pub struct Rotation {
 	pub angle: f32
 }
@@ -77,4 +91,9 @@ pub struct Weapon {
 #[derive(Component)]
 pub struct Sprite {
 	pub key: String
+}
+
+#[derive(Component)]
+pub struct Handle {
+	pub handle: RigidBodyHandle
 }

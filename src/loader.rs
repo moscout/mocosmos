@@ -22,7 +22,9 @@ pub async fn load_resources(world: &mut World) -> Result<()> {
 			key: row.get(0)?,
 			label: row.get(1)?,
 			file_name: row.get(2)?,
-			texture: None
+			texture: None,
+			width: 0.0,
+			height: 0.0
 		})
 	})?;
 
@@ -33,6 +35,8 @@ pub async fn load_resources(world: &mut World) -> Result<()> {
 		let texture = load_texture(&k.file_name).await.expect("can't load texture");
 		
 		texture.set_filter(FilterMode::Linear);
+		k.width = texture.width();
+		k.height = texture.height();
 		k.texture = Some(texture);
 
 		sprites.kinds.insert(k.key.clone(), k);
@@ -47,39 +51,81 @@ pub async fn load_resources(world: &mut World) -> Result<()> {
 }
 
 pub fn load_world(world: &mut World, id: &str) {
-	world.spawn((
-		Player,
-		Position { x: 300.0, y: 300.0 },
-		Rotation { angle: 0.0 },
-		Sprite { key: String::from("player-ship-a-blue") },
-		Weapon { kind: WeaponKind::OneBullet }
-	));
+	let mut kinds = HashMap::new();
 
-	world.spawn((
-		Asteroid,
-		Position { x: 50.0, y: 50.0 },
-		Rotation { angle: 0.0 },
-		Sprite { key: String::from("asteroid-a-grey-big") },
-	));
+	{
+		let sprites = world.get_resource::<SpriteKinds>().unwrap();
+
+		if let Some(kind) = sprites.kinds.get("player-ship-a-blue") {
+			kinds.insert(String::from("player-ship-a-blue"), Size { width: kind.width, height: kind.height });
+		}
+		if let Some(kind) = sprites.kinds.get("asteroid-a-grey-big") {
+			kinds.insert(String::from("asteroid-a-grey-big"), Size { width: kind.width, height: kind.height });
+		}
+		if let Some(kind) = sprites.kinds.get("asteroid-a-brown-small") {
+			kinds.insert(String::from("asteroid-a-brown-small"), Size { width: kind.width, height: kind.height });
+		}
+		if let Some(kind) = sprites.kinds.get("asteroid-c-brown-big") {
+			kinds.insert(String::from("asteroid-c-brown-big"), Size { width: kind.width, height: kind.height });
+		}
+		if let Some(kind) = sprites.kinds.get("asteroid-b-brown-tiny") {
+			kinds.insert(String::from("asteroid-b-brown-tiny"), Size { width: kind.width, height: kind.height });
+		}
+	}
+
+	if let Some(kind) = kinds.get("player-ship-a-blue") {
+		world.spawn((
+			Player,
+			Position { x: 300.0, y: 300.0 },
+			Rotation { angle: 0.0 },
+			Center { cx: kind.width / 2.0, cy: kind.height / 2.0 },
+			Size { width: kind.width, height: kind.height },
+			Sprite { key: String::from("player-ship-a-blue") },
+			Weapon { kind: WeaponKind::OneBullet }
+		));
+	}
+
+	if let Some(kind) = kinds.get("asteroid-a-grey-big") {
+		world.spawn((
+			Asteroid,
+			Position { x: 50.0, y: 50.0 },
+			Rotation { angle: 0.0 },
+			Center { cx: kind.width / 2.0, cy: kind.height / 2.0 },
+			Size { width: kind.width, height: kind.height },
+			Sprite { key: String::from("asteroid-a-grey-big") },
+		));
+	}
 	
-	world.spawn((
-		Asteroid,
-		Position { x: 500.0, y: 50.0 },
-		Rotation { angle: 0.0 },
-		Sprite { key: String::from("asteroid-a-brown-small") },
-	));
+	if let Some(kind) = kinds.get("asteroid-a-brown-small") {
+		world.spawn((
+			Asteroid,
+			Position { x: 500.0, y: 50.0 },
+			Rotation { angle: 0.0 },
+			Center { cx: kind.width / 2.0, cy: kind.height / 2.0 },
+			Size { width: kind.width, height: kind.height },
+			Sprite { key: String::from("asteroid-a-brown-small") },
+		));
+	}
 	
-	world.spawn((
-		Asteroid,
-		Position { x: 50.0, y: 500.0 },
-		Rotation { angle: 0.0 },
-		Sprite { key: String::from("asteroid-c-brown-big") },
-	));
+	if let Some(kind) = kinds.get("asteroid-c-brown-big") {
+		world.spawn((
+			Asteroid,
+			Position { x: 50.0, y: 500.0 },
+			Rotation { angle: 0.0 },
+			Center { cx: kind.width / 2.0, cy: kind.height / 2.0 },
+			Size { width: kind.width, height: kind.height },
+			Sprite { key: String::from("asteroid-c-brown-big") },
+		));
+	}
 	
-	world.spawn((
-		Asteroid,
-		Position { x: 500.0, y: 500.0 },
-		Rotation { angle: 0.0 },
-		Sprite { key: String::from("asteroid-b-brown-tiny") },
-	));
+	if let Some(kind) = kinds.get("asteroid-b-brown-tiny") {
+		world.spawn((
+			Asteroid,
+			Position { x: 500.0, y: 500.0 },
+			Rotation { angle: 0.0 },
+			Center { cx: kind.width / 2.0, cy: kind.height / 2.0 },
+			Size { width: kind.width, height: kind.height },
+			Sprite { key: String::from("asteroid-b-brown-tiny") },
+		));
+	}
 }
