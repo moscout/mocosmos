@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use bevy_ecs::prelude::*;
+use flecs_ecs::prelude::*;
 use macroquad::prelude::*;
 use rapier2d::prelude::*;
 
@@ -31,12 +31,12 @@ pub struct Physics {
 	pub events: Box<dyn EventHandler>
 }
 
-#[derive(Resource)]
+#[derive(Component)]
 pub struct SpriteKinds {
 	pub kinds: HashMap<String, SpriteKind>
 }
 
-#[derive(Resource)]
+#[derive(Component)]
 pub enum GameState {
 	Menu,
 	Playing,
@@ -44,7 +44,7 @@ pub enum GameState {
 	Over,
 }
 
-#[derive(Resource)]
+#[derive(Component)]
 pub struct Space {
 	pub physics: Box<Physics> 
 }
@@ -66,13 +66,13 @@ pub struct Position {
 	pub y: f32
 }
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct Center {
 	pub cx: f32,
 	pub cy: f32
 }
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct Size {
 	pub width: f32,
 	pub height: f32

@@ -1,7 +1,7 @@
-use bevy_ecs::prelude::*;
+use flecs_ecs::prelude::*;
 use rapier2d::prelude::*;
 
-use crate::components::{ Space, Physics };
+use crate::components::*;
 
 pub fn create_space(world: &mut World) {
     let mut bodies = RigidBodySet::new();
@@ -20,7 +20,11 @@ pub fn create_space(world: &mut World) {
 	let hooks = Box::new(());
 	let events = Box::new(());
 
-	world.insert_resource(Space {
+	world.each::<(&Position, &Size, &Center)>(|(position, size, center)| {
+		println!("{:?}, {:?}, {:?}", position, size, center);
+	});
+
+	world.set(Space {
 		physics: Box::new(Physics {
 			bodies,
 			colliders,
