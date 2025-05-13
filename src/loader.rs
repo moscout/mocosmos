@@ -60,6 +60,8 @@ pub fn load_world(world: &mut World, id: &str) {
 				.set(Size     { width: kind.width, height: kind.height })
 				.set(Sprite   { key: String::from("player-ship-a-blue") })
 				.set(Weapon   { kind: WeaponKind::OneBullet })
+				.set(Ship     { speed: 50, tracing: false, trace: Trace { key: String::from("thin"), tint: 0 }})
+				.set(Handle   { handle: None })
 				.add::<Player>();
 		}
 		
@@ -70,6 +72,7 @@ pub fn load_world(world: &mut World, id: &str) {
 				.set(Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 })
 				.set(Size     { width: kind.width, height: kind.height })
 				.set(Sprite   { key: String::from("asteroid-a-grey-big") })
+				.set(Handle   { handle: None })
 				.add::<Asteroid>();
 		}
 
@@ -80,6 +83,7 @@ pub fn load_world(world: &mut World, id: &str) {
 				.set(Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 })
 				.set(Size     { width: kind.width, height: kind.height })
 				.set(Sprite   { key: String::from("asteroid-a-brown-small") })
+				.set(Handle   { handle: None })
 				.add::<Asteroid>();
 		}
 
@@ -90,6 +94,7 @@ pub fn load_world(world: &mut World, id: &str) {
 				.set(Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 })
 				.set(Size     { width: kind.width, height: kind.height })
 				.set(Sprite   { key: String::from("asteroid-c-brown-big") })
+				.set(Handle   { handle: None })
 				.add::<Asteroid>();
 		}
 
@@ -100,6 +105,7 @@ pub fn load_world(world: &mut World, id: &str) {
 				.set(Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 })
 				.set(Size     { width: kind.width, height: kind.height })
 				.set(Sprite   { key: String::from("asteroid-b-brown-tiny") })
+				.set(Handle   { handle: None })
 				.add::<Asteroid>();
 		}
 	});

@@ -9,6 +9,7 @@ pub mod loader;
 pub mod creator;
 pub mod components;
 pub mod systems;
+pub mod helpers;
 
 #[macroquad::main("mocosmos")]
 async fn main() -> Result<(), macroquad::Error> {

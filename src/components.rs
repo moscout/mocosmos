@@ -54,6 +54,11 @@ pub enum WeaponKind {
 	TwoBullets = 2
 }
 
+pub struct Trace {
+	pub key: String,
+	pub tint: u8
+}
+
 #[derive(Component)]
 pub struct Player;
 
@@ -95,5 +100,12 @@ pub struct Sprite {
 
 #[derive(Component)]
 pub struct Handle {
-	pub handle: RigidBodyHandle
+	pub handle: Option<RigidBodyHandle>
+}
+
+#[derive(Component)]
+pub struct Ship {
+	pub speed: i32,
+	pub tracing: bool,
+	pub trace: Trace
 }

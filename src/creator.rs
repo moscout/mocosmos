@@ -2,6 +2,7 @@ use flecs_ecs::prelude::*;
 use rapier2d::prelude::*;
 
 use crate::components::*;
+use crate::helpers::pixels_to_meters;
 
 pub fn create_space(world: &mut World) {
     let mut bodies = RigidBodySet::new();
@@ -20,8 +21,18 @@ pub fn create_space(world: &mut World) {
 	let hooks = Box::new(());
 	let events = Box::new(());
 
-	world.each::<(&Position, &Size, &Center)>(|(position, size, center)| {
-		println!("{:?}, {:?}, {:?}", position, size, center);
+	world.each::<(&Position, &Size, &Center, &mut Handle)>(|(position, size, center, handle)| {
+		let body = RigidBodyBuilder::new(RigidBodyType::Dynamic)
+			.translation(vector![pixels_to_meters(position.x + center.cx), pixels_to_meters(position.y + center.cy)])
+			.build();
+		let _handle = bodies.insert(body);
+		let collider = ColliderBuilder::cuboid(pixels_to_meters(size.width) / 2.0, pixels_to_meters(size.height) / 2.0)
+			.density(1.0)
+			.friction(0.1)
+			.build();
+
+		colliders.insert_with_parent(collider, _handle, &mut bodies);
+		handle.handle = Some(_handle);
 	});
 
 	world.set(Space {
