@@ -558,6 +558,7 @@ dependencies = [
 name = "mocosmos"
 version = "0.1.0"
 dependencies = [
+ "bitflags 2.9.0",
  "flecs_ecs",
  "macroquad",
  "rapier2d",

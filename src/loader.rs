@@ -61,6 +61,7 @@ pub fn load_world(world: &mut World, id: &str) {
 				.set(Sprite   { key: String::from("player-ship-a-blue") })
 				.set(Weapon   { kind: WeaponKind::OneBullet })
 				.set(Ship     { speed: 50, tracing: false, trace: Trace { key: String::from("thin"), tint: 0 }})
+				.set(Actions  { actions: Action::Nothing })
 				.set(Handle   { handle: None })
 				.add::<Player>();
 		}
