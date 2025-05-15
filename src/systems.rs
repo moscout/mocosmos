@@ -63,7 +63,7 @@ fn actions(world: &mut World) {
                 GameState::Playing => {
                     if let Some(handle) = handle.handle {
                         if let Some(body) = space.physics.bodies.get_mut(handle) {
-                        	let impulse = 1.3 * body.mass();
+                        	let impulse = 3.90625 * body.mass();
                         	let angular_impulse = 0.6510417 * body.mass();
                             
                             let rotation = body.rotation();

@@ -22,6 +22,7 @@ async fn main() -> Result<(), macroquad::Error> {
 
     loop {
         clear_background(BLACK);
+        set_camera(&Camera2D { zoom: vec2(1.0 / screen_width(), 1.0 / screen_height()), ..Camera2D::default() });
         world.progress();
         next_frame().await
     }
