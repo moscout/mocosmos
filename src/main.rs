@@ -20,9 +20,10 @@ async fn main() -> Result<(), macroquad::Error> {
     create_space(&mut world);
     create_systems(&mut world);
 
+    set_camera(&Camera2D { zoom: vec2(1.0 / screen_width(), 1.0 / screen_height()), ..Camera2D::default() });
+
     loop {
         clear_background(BLACK);
-        set_camera(&Camera2D { zoom: vec2(1.0 / screen_width(), 1.0 / screen_height()), ..Camera2D::default() });
         world.progress();
         next_frame().await
     }

@@ -84,8 +84,7 @@ pub enum WeaponKind {
 }
 
 pub struct Trace {
-	pub key: String,
-	pub tint: u8
+	pub key: String
 }
 
 #[derive(Component)]

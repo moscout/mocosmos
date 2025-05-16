@@ -193,4 +193,36 @@ fn draw(world: &mut World) {
                 GameState::Over => {}
             }
         });
+
+    world.system_named::<(&Position, &Rot, &Sprite, &Center, &Ship, &SpriteKinds, &GameState)>("draw-traces")
+        .term_at(5)
+        .singleton()
+        .term_at(6)
+        .singleton()
+        .each(|(position, rotation, sprite, center, ship, sprites, state)| {
+            match state {
+                GameState::Playing => {
+        			if let Some(kind) = sprites.kinds.get(&sprite.key) {
+            			if let Some(trace) = sprites.kinds.get(&ship.trace.key) {
+            			    if let Some(texture) = &trace.texture {
+            			        if ship.tracing {
+                    			    draw_texture_ex(
+                    			        texture,
+                    			        position.x + center.cx - trace.width / 2.0,
+                    			        position.y + kind.height,
+                    			        WHITE,
+                    			        DrawTextureParams {
+                    			            rotation: rotation.angle,
+                    			            pivot: Some(vec2(position.x + center.cx, position.y + center.cy)),
+                    			            ..Default::default() });
+            			        }
+                		    }
+            			}
+        			}
+                },
+                GameState::Menu => {},
+                GameState::Paused => {},
+                GameState::Over => {}
+            }
+        });
 }

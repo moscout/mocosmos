@@ -54,13 +54,13 @@ pub fn load_world(world: &mut World, id: &str) {
 	world.get::<&SpriteKinds>(|sprites| {
 		if let Some(kind) = sprites.kinds.get("player-ship-a-blue") {
 			world.entity()
-				.set(Position { x: 300.0, y: 300.0 })
+				.set(Position { x: 0.0, y: 0.0 })
 				.set(Rotation { angle: 0.0 })
 				.set(Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 })
 				.set(Size     { width: kind.width, height: kind.height })
 				.set(Sprite   { key: String::from("player-ship-a-blue") })
 				.set(Weapon   { kind: WeaponKind::OneBullet })
-				.set(Ship     { speed: 50, tracing: false, trace: Trace { key: String::from("thin"), tint: 0 }})
+				.set(Ship     { speed: 50, tracing: false, trace: Trace { key: String::from("trace-b-wide") }})
 				.set(Actions  { actions: Action::Nothing })
 				.set(Handle   { handle: None })
 				.add::<Player>();
@@ -68,7 +68,7 @@ pub fn load_world(world: &mut World, id: &str) {
 		
 		if let Some(kind) = sprites.kinds.get("asteroid-a-grey-big") {
 			world.entity()
-				.set(Position { x: 50.0, y: 50.0 })
+				.set(Position { x: -500.0, y: -500.0 })
 				.set(Rotation { angle: 0.0 })
 				.set(Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 })
 				.set(Size     { width: kind.width, height: kind.height })
@@ -79,7 +79,7 @@ pub fn load_world(world: &mut World, id: &str) {
 
 		if let Some(kind) = sprites.kinds.get("asteroid-a-brown-small") {
 			world.entity()
-				.set(Position { x: 500.0, y: 50.0 })
+				.set(Position { x: 500.0, y: -500.0 })
 				.set(Rotation { angle: 0.0 })
 				.set(Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 })
 				.set(Size     { width: kind.width, height: kind.height })
@@ -90,7 +90,7 @@ pub fn load_world(world: &mut World, id: &str) {
 
 		if let Some(kind) = sprites.kinds.get("asteroid-c-brown-big") {
 			world.entity()
-				.set(Position { x: 50.0, y: 500.0 })
+				.set(Position { x: -500.0, y: 500.0 })
 				.set(Rotation { angle: 0.0 })
 				.set(Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 })
 				.set(Size     { width: kind.width, height: kind.height })
