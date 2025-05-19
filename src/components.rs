@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use flecs_ecs::prelude::*;
+use bevy_ecs::prelude::*;
 use macroquad::prelude::*;
 use rapier2d::prelude::*;
 use bitflags::bitflags;
@@ -60,12 +60,12 @@ pub struct Physics {
 	pub events: Box<dyn EventHandler>
 }
 
-#[derive(Component)]
+#[derive(Resource)]
 pub struct SpriteKinds {
 	pub kinds: HashMap<String, SpriteKind>
 }
 
-#[derive(Component)]
+#[derive(Resource)]
 pub enum GameState {
 	Menu,
 	Playing,
@@ -73,7 +73,7 @@ pub enum GameState {
 	Over,
 }
 
-#[derive(Component)]
+#[derive(Resource)]
 pub struct Space {
 	pub physics: Box<Physics> 
 }

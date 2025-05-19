@@ -1,10 +1,10 @@
-use flecs_ecs::prelude::*;
+use bevy_ecs::prelude::*;
 use rapier2d::prelude::*;
 
 use crate::components::*;
 use crate::helpers::pixels_to_meters;
 
-pub fn create_space(world: &mut World) {
+pub fn create_space(mut query: Query<(&Position, &Size, &Center, &mut Handle)>,	mut commands: Commands) {
     let mut bodies = RigidBodySet::new();
     let mut colliders = ColliderSet::new();
 	let pipeline = PhysicsPipeline::new();
@@ -21,7 +21,7 @@ pub fn create_space(world: &mut World) {
 	let hooks = Box::new(());
 	let events = Box::new(());
 
-	world.each::<(&Position, &Size, &Center, &mut Handle)>(|(position, size, center, handle)| {
+	for (position, size, center, mut handle) in &mut query {
 		let body = RigidBodyBuilder::new(RigidBodyType::Dynamic)
 			.translation(vector![pixels_to_meters(position.x + center.cx), pixels_to_meters(position.y + center.cy)])
 			.build();
@@ -33,9 +33,9 @@ pub fn create_space(world: &mut World) {
 
 		colliders.insert_with_parent(collider, _handle, &mut bodies);
 		handle.handle = Some(_handle);
-	});
+	}
 
-	world.set(Space {
+	commands.insert_resource(Space {
 		physics: Box::new(Physics {
 			bodies,
 			colliders,
