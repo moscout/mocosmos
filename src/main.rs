@@ -24,7 +24,8 @@ async fn main() -> Result<(), macroquad::Error> {
             actions.after(control),
             physics.after(actions),
             transformation.after(physics),
-            draw.after(transformation)
+            draw.after(transformation),
+            shooting
         ));
 
     load_resources(app.world_mut()).await.expect("resources loading error");

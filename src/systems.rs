@@ -1,17 +1,22 @@
 use std::ops::DerefMut;
+use std::time::Instant;
 
 use bevy_ecs::prelude::*;
 use macroquad::prelude::*;
-use rapier2d::prelude::*;
+
+use rapier2d::{
+    na::Point2,
+    prelude::*
+};
 
 use crate::{
     components::{ Rotation as Rot, * },
     helpers::*
 };
 
-pub fn control(mut query: Query<&mut Actions, With<Player>>, mut state: ResMut<GameState>) {
+pub fn control(mut query: Query<&mut Actions, With<Player>>, states: Res<GameStates>) {
     for mut actions in &mut query {
-        match state.deref_mut() {
+        match states.state {
             GameState::Playing => {
                 actions.actions = Action::Nothing;
         
@@ -39,14 +44,14 @@ pub fn control(mut query: Query<&mut Actions, With<Player>>, mut state: ResMut<G
     }
 }
 
-pub fn actions(mut query: Query<(&Handle, &Actions, &mut Weapon, &mut Ship), With<Player>>, mut space: ResMut<Space>, mut state: ResMut<GameState>) {
+pub fn actions(mut query: Query<(&Handle, &Actions, &mut Weapon, &mut Ship), With<Player>>, mut space: ResMut<Space>, states: Res<GameStates>) {
     for (handle, actions, mut weapon, mut ship) in &mut query {
-        match state.deref_mut() {
+        match states.state {
             GameState::Playing => {
                 if let Some(handle) = handle.handle {
                     if let Some(body) = space.physics.bodies.get_mut(handle) {
                     	let impulse = 3.90625 * body.mass();
-                    	let angular_impulse = 0.6510417 * body.mass();
+                    	let angular_impulse = 0.7510417 * body.mass();
                         
                         let rotation = body.rotation();
                         let vec_left = rotation.transform_vector(&vector![-impulse, 0.0]);
@@ -100,8 +105,8 @@ pub fn actions(mut query: Query<(&Handle, &Actions, &mut Weapon, &mut Ship), Wit
     }
 }
 
-pub fn physics(mut space: ResMut<Space>, mut state: ResMut<GameState>) {
-    match state.deref_mut() {
+pub fn physics(mut space: ResMut<Space>, states: Res<GameStates>) {
+    match states.state {
         GameState::Playing => {
             let physics = space.physics.deref_mut();
 
@@ -125,14 +130,15 @@ pub fn physics(mut space: ResMut<Space>, mut state: ResMut<GameState>) {
     }
 }
 
-pub fn transformation(mut query: Query<(&Handle, &mut Position, &mut Rot, &Center)>, space: Res<Space>, mut state: ResMut<GameState>) {
+pub fn transformation(mut query: Query<(&Handle, &mut Position, &mut Rot, &Center)>, space: Res<Space>, states: Res<GameStates>) {
     for (handle, mut position, mut rotation, center) in &mut query {
-        match state.deref_mut() {
+        match states.state {
             GameState::Playing => {
                 if let Some(handle) = handle.handle {
                     if let Some(body) = space.physics.bodies.get(handle) {
                         position.x = meters_to_pixels(body.translation().x) - center.cx;
                         position.y = meters_to_pixels(body.translation().y) - center.cy;
+                        rotation.rotation = body.rotation().clone();
                         rotation.angle = body.rotation().angle();
                     }
                 }
@@ -142,9 +148,9 @@ pub fn transformation(mut query: Query<(&Handle, &mut Position, &mut Rot, &Cente
     }
 }
 
-pub fn draw(mut query: Query<(&Position, &Rot, &Sprite, &Center, Option<&Ship>)>, sprites: Res<SpriteKinds>, mut state: ResMut<GameState>) {
-    for (position, rotation, sprite, center, ship) in &mut query {
-        match state.deref_mut() {
+pub fn draw(query: Query<(&Position, &Rot, &Sprite, &Center, Option<&Ship>)>, sprites: Res<SpriteKinds>, states: Res<GameStates>) {
+    for (position, rotation, sprite, center, ship) in &query {
+        match states.state {
             GameState::Playing => {
     			if let Some(kind) = sprites.kinds.get(&sprite.key) {
     			    if let Some(texture) = &kind.texture {
@@ -176,6 +182,123 @@ pub fn draw(mut query: Query<(&Position, &Rot, &Sprite, &Center, Option<&Ship>)>
             GameState::Menu => {},
             GameState::Paused => {},
             GameState::Over => {}
+        }
+    }
+}
+
+pub fn shooting(
+    mut query: Query<(&Position, &Center, &Rot, &Size, &mut Weapon, &Actions)>,
+    mut commands: Commands,
+    states: Res<GameStates>,
+    sprites: Res<SpriteKinds>,
+    mut space: ResMut<Space>) {
+    for (position, center, rotation, size, mut weapon, actions) in &mut query {
+        if states.state == GameState::Playing && actions.actions & Action::Shoot != Action::Nothing && weapon.shot.elapsed().as_millis() >= 100 {
+            if let Some(kind) = sprites.kinds.get(&String::from("bullet-a")) {
+                match weapon.kind {
+                    WeaponKind::OneBullet => {
+                        let physics = space.physics.deref_mut();
+                        let impulse = rotation.rotation.transform_vector(&vector![0.0, -20.0]);
+
+                        let pos = rotate_point(&Point2::new(position.x + center.cx - kind.width / 2.0, position.y - kind.height),
+                            position.x + center.cx, position.y + center.cy, rotation.angle);
+
+                		let body = RigidBodyBuilder::new(RigidBodyType::Dynamic)
+                			.translation(vector![pixels_to_meters(pos.x + kind.width / 2.0), pixels_to_meters(pos.y + kind.height / 2.0)])
+                			.rotation(rotation.angle)
+                			.build();
+                		let handle = physics.bodies.insert(body);
+                		let collider = ColliderBuilder::cuboid(pixels_to_meters(kind.width) / 2.0, pixels_to_meters(kind.height) / 2.0)
+                			.collision_groups(InteractionGroups::new(Group::GROUP_10, Group::GROUP_2 | Group::GROUP_10))
+                			.density(1.0)
+                			.friction(0.01)
+                			.build();
+
+                		physics.colliders.insert_with_parent(collider, handle, &mut physics.bodies);
+
+                        commands.spawn((
+                            Bullet,
+                            Position { x: pos.x, y: pos.y },
+                            Size     { width: kind.width, height: kind.height },
+                            Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
+                            Sprite   { key: String::from("bullet-a") },
+                            Handle   { handle: Some(handle) },
+                            rotation.clone()
+                        ));
+
+                        if let Some(body) = physics.bodies.get_mut(handle) {
+                            body.apply_impulse(impulse, true);
+                        }
+                    },
+
+                    WeaponKind::TwoBullets => {
+                        let physics = space.physics.deref_mut();
+                        let impulse = rotation.rotation.transform_vector(&vector![0.0, -20.0]);
+                        
+                        let dx = size.width / 3.0;
+                        let pos1 = rotate_point(&Point2::new(position.x + dx - kind.width / 2.0, position.y - kind.height),
+                            position.x + center.cx, position.y + center.cy, rotation.angle);
+                        let pos2 = rotate_point(&Point2::new(position.x + 2.0 * dx - kind.width / 2.0, position.y - kind.height),
+                            position.x + center.cx, position.y + center.cy, rotation.angle);
+
+                		let body1 = RigidBodyBuilder::new(RigidBodyType::Dynamic)
+                			.translation(vector![pixels_to_meters(pos1.x + kind.width / 2.0), pixels_to_meters(pos1.y + kind.height / 2.0)])
+                			.rotation(rotation.angle)
+                			.build();
+                		let handle1 = physics.bodies.insert(body1);
+                		let collider1 = ColliderBuilder::cuboid(pixels_to_meters(kind.width) / 2.0, pixels_to_meters(kind.height) / 2.0)
+                			.collision_groups(InteractionGroups::new(Group::GROUP_10, Group::GROUP_2 | Group::GROUP_10))
+                			.density(1.0)
+                			.friction(0.01)
+                			.build();
+
+                		physics.colliders.insert_with_parent(collider1, handle1, &mut physics.bodies);
+
+                		let body2 = RigidBodyBuilder::new(RigidBodyType::Dynamic)
+                			.translation(vector![pixels_to_meters(pos2.x + kind.width / 2.0), pixels_to_meters(pos2.y + kind.height / 2.0)])
+                			.rotation(rotation.angle)
+                			.build();
+                		let handle2 = physics.bodies.insert(body2);
+                		let collider2 = ColliderBuilder::cuboid(pixels_to_meters(kind.width) / 2.0, pixels_to_meters(kind.height) / 2.0)
+                			.collision_groups(InteractionGroups::new(Group::GROUP_10, Group::GROUP_2 | Group::GROUP_10))
+                			.density(1.0)
+                			.friction(0.01)
+                			.build();
+
+                		physics.colliders.insert_with_parent(collider2, handle2, &mut physics.bodies);
+
+                        commands.spawn((
+                            Bullet,
+                            Position { x: pos1.x, y: pos1.y },
+                            Size     { width: kind.width, height: kind.height },
+                            Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
+                            Sprite   { key: String::from("bullet-a") },
+                            Handle   { handle: Some(handle1) },
+                            rotation.clone()
+                        ));
+
+                        commands.spawn((
+                            Bullet,
+                            Position { x: pos2.x, y: pos2.y },
+                            Size     { width: kind.width, height: kind.height },
+                            Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
+                            Sprite   { key: String::from("bullet-a") },
+                            Handle   { handle: Some(handle2) },
+                            rotation.clone()
+                        ));
+
+                        if let Some(body1) = physics.bodies.get_mut(handle1) {
+                            body1.apply_impulse(impulse, true);
+                        }
+
+                        if let Some(body2) = physics.bodies.get_mut(handle2) {
+                            body2.apply_impulse(impulse, true);
+                        }
+                    }
+                }
+
+                weapon.shot = Instant::now();
+            }
         }
     }
 }

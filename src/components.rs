@@ -1,8 +1,13 @@
 use std::collections::HashMap;
+use std::time::Instant;
 use bevy_ecs::prelude::*;
 use macroquad::prelude::*;
-use rapier2d::prelude::*;
 use bitflags::bitflags;
+
+use rapier2d::{
+	math::Rotation as Rot,
+	prelude::*
+};
 
 bitflags! {
 	#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -60,17 +65,22 @@ pub struct Physics {
 	pub events: Box<dyn EventHandler>
 }
 
-#[derive(Resource)]
-pub struct SpriteKinds {
-	pub kinds: HashMap<String, SpriteKind>
-}
-
-#[derive(Resource)]
+#[derive(PartialEq, Eq)]
 pub enum GameState {
 	Menu,
 	Playing,
 	Paused,
 	Over,
+}
+
+#[derive(Resource)]
+pub struct GameStates {
+	pub state: GameState
+}
+
+#[derive(Resource)]
+pub struct SpriteKinds {
+	pub kinds: HashMap<String, SpriteKind>
 }
 
 #[derive(Resource)]
@@ -93,6 +103,9 @@ pub struct Player;
 #[derive(Component)]
 pub struct Asteroid;
 
+#[derive(Component)]
+pub struct Bullet;
+
 #[derive(Component, Debug)]
 pub struct Position {
 	pub x: f32,
@@ -111,14 +124,16 @@ pub struct Size {
 	pub height: f32
 }
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct Rotation {
-	pub angle: f32
+	pub angle: f32,
+	pub rotation: Rot<f32>
 }
 
 #[derive(Component)]
 pub struct Weapon {
-	pub kind: WeaponKind
+	pub kind: WeaponKind,
+	pub shot: Instant
 }
 
 #[derive(Component)]

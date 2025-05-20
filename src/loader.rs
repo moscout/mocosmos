@@ -1,7 +1,9 @@
 use std::env::current_exe;
 use std::collections::HashMap;
+use std::time::Instant;
 use bevy_ecs::prelude::*;
 use macroquad::prelude::*;
+use rapier2d::na::UnitComplex;
 use rusqlite::{ Connection, Result };
 
 use crate::components::*;
@@ -45,7 +47,7 @@ pub async fn load_resources(world: &mut World) -> Result<()> {
 	build_textures_atlas();
 
 	world.insert_resource(sprites);
-    world.insert_resource(GameState::Playing);
+    world.insert_resource(GameStates { state: GameState::Playing });
 
 	Ok(())
 }
@@ -55,11 +57,11 @@ pub fn load_world(mut commands: Commands, sprites: Res<SpriteKinds>) {
 		commands.spawn((
 			Player,
 			Position { x: 0.0, y: 0.0 },
-			Rotation { angle: 0.0 },
+			Rotation { angle: 0.0, rotation: UnitComplex::new(0.0) },
 			Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
 			Size     { width: kind.width, height: kind.height },
 			Sprite   { key: String::from("player-ship-a-blue") },
-			Weapon   { kind: WeaponKind::OneBullet },
+			Weapon   { kind: WeaponKind::OneBullet, shot: Instant::now() },
 			Ship     { speed: 50, tracing: false, trace: Trace { key: String::from("trace-b-wide") }},
 			Actions  { actions: Action::Nothing },
 			Handle   { handle: None }
@@ -70,7 +72,7 @@ pub fn load_world(mut commands: Commands, sprites: Res<SpriteKinds>) {
 		commands.spawn((
 			Asteroid,
 			Position { x: -500.0, y: -500.0 },
-			Rotation { angle: 0.0 },
+			Rotation { angle: 0.0, rotation: UnitComplex::new(0.0) },
 			Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
 			Size     { width: kind.width, height: kind.height },
 			Sprite   { key: String::from("asteroid-a-grey-big") },
@@ -82,7 +84,7 @@ pub fn load_world(mut commands: Commands, sprites: Res<SpriteKinds>) {
 		commands.spawn((
 			Asteroid,
 			Position { x: 500.0, y: -500.0 },
-			Rotation { angle: 0.0 },
+			Rotation { angle: 0.0, rotation: UnitComplex::new(0.0) },
 			Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
 			Size     { width: kind.width, height: kind.height },
 			Sprite   { key: String::from("asteroid-a-brown-small") },
@@ -94,7 +96,7 @@ pub fn load_world(mut commands: Commands, sprites: Res<SpriteKinds>) {
 		commands.spawn((
 			Asteroid,
 			Position { x: -500.0, y: 500.0 },
-			Rotation { angle: 0.0 },
+			Rotation { angle: 0.0, rotation: UnitComplex::new(0.0) },
 			Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
 			Size     { width: kind.width, height: kind.height },
 			Sprite   { key: String::from("asteroid-c-brown-big") },
@@ -106,7 +108,7 @@ pub fn load_world(mut commands: Commands, sprites: Res<SpriteKinds>) {
 		commands.spawn((
 			Asteroid,
 			Position { x: 500.0, y: 500.0 },
-			Rotation { angle: 0.0 },
+			Rotation { angle: 0.0, rotation: UnitComplex::new(0.0) },
 			Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
 			Size     { width: kind.width, height: kind.height },
 			Sprite   { key: String::from("asteroid-b-brown-tiny") },

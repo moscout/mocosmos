@@ -53,3 +53,4 @@ insert into sprite (key, file_name, label) values ('player-ship-c-red', 'player-
 insert into sprite (key, file_name, label) values ('trace-a-wide', 'trace-a-wide.png', '');
 insert into sprite (key, file_name, label) values ('trace-b-wide', 'trace-b-wide.png', '');
 insert into sprite (key, file_name, label) values ('trace-c-wide', 'trace-c-wide.png', '');
+insert into sprite (key, file_name, label) values ('bullet-a', 'bullet-a.png', '');
