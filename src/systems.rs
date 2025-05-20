@@ -302,3 +302,33 @@ pub fn shooting(
         }
     }
 }
+
+pub fn cleaning(
+    query: Query<(Entity, &Position, &Size, &Handle), With<Bullet>>,
+    mut commands: Commands,
+    states: Res<GameStates>,
+    mut space: ResMut<Space>) {
+    let rect = Rectangle {
+        x: -(screen_width() / 2.0) * 2.0,
+        y: -(screen_height() / 2.0) * 2.0,
+        width: screen_width() * 2.0,
+        height: screen_height() * 2.0 };
+
+    for (entity, position, size, handle) in &query {
+        if states.state == GameState::Playing && is_outside_of_rect(&position, &size, &rect) {
+            if let Some(handle) = handle.handle {
+                let physics = space.physics.deref_mut();
+
+                physics.bodies.remove(
+                    handle,
+                    &mut physics.islands,
+                    &mut physics.colliders,
+                    &mut physics.impulse_joints,
+                    &mut physics.multibody_joints,
+                    true);
+
+                commands.entity(entity).despawn();
+            }
+        }
+    }
+}

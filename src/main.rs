@@ -25,11 +25,15 @@ async fn main() -> Result<(), macroquad::Error> {
             physics.after(actions),
             transformation.after(physics),
             draw.after(transformation),
-            shooting
+            shooting,
+            cleaning
         ));
 
     load_resources(app.world_mut()).await.expect("resources loading error");
-    set_camera(&Camera2D { zoom: vec2(1.0 / screen_width(), 1.0 / screen_height()), ..Camera2D::default() });
+    
+    set_camera(&Camera2D {
+        zoom: vec2(1.0 / screen_width(), 1.0 / screen_height()),
+        ..Camera2D::default() });
 
     loop {
         clear_background(BLACK);
