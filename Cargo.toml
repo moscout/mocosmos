@@ -10,6 +10,7 @@ bevy_ecs = { version = "0.16.0" }
 bitflags = { version = "2.9.0" }
 rapier2d = { version = "0.25.0", features = [ "simd-stable" ] }
 rusqlite = { version = "0.35.0", features = ["bundled"] }
+crossbeam = { version = "0.8.4" }
 
 [profile.release]
 strip = true

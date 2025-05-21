@@ -769,6 +769,7 @@ dependencies = [
  "bevy_app",
  "bevy_ecs",
  "bitflags 2.9.0",
+ "crossbeam",
  "macroquad",
  "rapier2d",
  "rusqlite",

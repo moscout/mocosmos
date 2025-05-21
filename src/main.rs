@@ -26,6 +26,7 @@ async fn main() -> Result<(), macroquad::Error> {
             transformation.after(physics),
             draw.after(transformation),
             shooting,
+            collisions,
             cleaning
         ));
 

@@ -69,7 +69,6 @@ pub struct Physics {
 	pub solver: CCDSolver,
 	pub query_pipeline: QueryPipeline,
 	pub hooks: Box<dyn PhysicsHooks>,
-	pub events: Box<dyn EventHandler>
 }
 
 #[derive(PartialEq, Eq)]
@@ -163,4 +162,9 @@ pub struct Ship {
 #[derive(Component)]
 pub struct Actions {
 	pub actions: Action
+}
+
+#[derive(Component)]
+pub struct Collision {
+	pub entity: Entity
 }

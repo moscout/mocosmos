@@ -3,6 +3,7 @@ use std::time::Instant;
 
 use bevy_ecs::prelude::*;
 use macroquad::prelude::*;
+use crossbeam::channel::unbounded;
 
 use rapier2d::{
     na::Point2,
@@ -105,11 +106,14 @@ pub fn actions(mut query: Query<(&Handle, &Actions, &mut Weapon, &mut Ship), Wit
     }
 }
 
-pub fn physics(mut space: ResMut<Space>, states: Res<GameStates>) {
+pub fn physics(mut commands: Commands, mut space: ResMut<Space>, states: Res<GameStates>) {
     match states.state {
         GameState::Playing => {
             let physics = space.physics.deref_mut();
-
+            let (collision_send, collision_recv) = unbounded();
+            let (contact_force_send, contact_force_recv) = unbounded();
+            let event_handler = ChannelEventCollector::new(collision_send, contact_force_send);
+ 
             physics.pipeline.step(
                 &physics.gravity,
                 &physics.parameters,
@@ -123,8 +127,26 @@ pub fn physics(mut space: ResMut<Space>, states: Res<GameStates>) {
                 &mut physics.solver,
                 Some(&mut physics.query_pipeline),
                 physics.hooks.deref_mut(),
-                physics.events.deref_mut()
+                &event_handler
             );
+
+            while let Ok(event) = contact_force_recv.try_recv() {
+                if let Some(collider1) = physics.colliders.get(event.collider1) {
+                    if let Some(collider2) = physics.colliders.get(event.collider2) {
+                        if let Some(handle1) = collider1.parent() {
+                            if let Some(handle2) = collider2.parent() {
+                                let id1 = if let Some(body1) = physics.bodies.get(handle1) { body1.user_data } else { 0 as u128 };
+                                let id2 = if let Some(body2) = physics.bodies.get(handle2) { body2.user_data } else { 0 as u128 };
+                                let entity1 = Entity::from_bits(id1 as u64);
+                                let entity2 = Entity::from_bits(id2 as u64);
+
+                                commands.entity(entity1).insert(Collision { entity: entity2 });
+                                commands.entity(entity2).insert(Collision { entity: entity1 });
+                            }
+                        }
+                    }
+                }
+            }
         },
         _ => {}
     }
@@ -206,17 +228,19 @@ pub fn shooting(
                 		let body = RigidBodyBuilder::new(RigidBodyType::Dynamic)
                 			.translation(vector![pixels_to_meters(pos.x + kind.width / 2.0), pixels_to_meters(pos.y + kind.height / 2.0)])
                 			.rotation(rotation.angle)
+                			.ccd_enabled(true)
                 			.build();
                 		let handle = physics.bodies.insert(body);
                 		let collider = ColliderBuilder::cuboid(pixels_to_meters(kind.width) / 2.0, pixels_to_meters(kind.height) / 2.0)
                 			.collision_groups(InteractionGroups::new(Group::GROUP_10, Group::GROUP_2 | Group::GROUP_10))
+                			.active_events(ActiveEvents::CONTACT_FORCE_EVENTS)
                 			.density(1.0)
                 			.friction(0.01)
                 			.build();
 
                 		physics.colliders.insert_with_parent(collider, handle, &mut physics.bodies);
 
-                        commands.spawn((
+                        let entity = commands.spawn((
                             Bullet,
                             Position { x: pos.x, y: pos.y },
                             Size     { width: kind.width, height: kind.height },
@@ -224,9 +248,10 @@ pub fn shooting(
                             Sprite   { key: String::from("bullet-a") },
                             Handle   { handle: Some(handle) },
                             rotation.clone()
-                        ));
+                        )).id();
 
                         if let Some(body) = physics.bodies.get_mut(handle) {
+                            body.user_data = entity.to_bits() as u128;
                             body.apply_impulse(impulse, true);
                         }
                     },
@@ -244,10 +269,12 @@ pub fn shooting(
                 		let body1 = RigidBodyBuilder::new(RigidBodyType::Dynamic)
                 			.translation(vector![pixels_to_meters(pos1.x + kind.width / 2.0), pixels_to_meters(pos1.y + kind.height / 2.0)])
                 			.rotation(rotation.angle)
+                			.ccd_enabled(true)
                 			.build();
                 		let handle1 = physics.bodies.insert(body1);
                 		let collider1 = ColliderBuilder::cuboid(pixels_to_meters(kind.width) / 2.0, pixels_to_meters(kind.height) / 2.0)
                 			.collision_groups(InteractionGroups::new(Group::GROUP_10, Group::GROUP_2 | Group::GROUP_10))
+                			.active_events(ActiveEvents::CONTACT_FORCE_EVENTS)
                 			.density(1.0)
                 			.friction(0.01)
                 			.build();
@@ -257,17 +284,19 @@ pub fn shooting(
                 		let body2 = RigidBodyBuilder::new(RigidBodyType::Dynamic)
                 			.translation(vector![pixels_to_meters(pos2.x + kind.width / 2.0), pixels_to_meters(pos2.y + kind.height / 2.0)])
                 			.rotation(rotation.angle)
+                			.ccd_enabled(true)
                 			.build();
                 		let handle2 = physics.bodies.insert(body2);
                 		let collider2 = ColliderBuilder::cuboid(pixels_to_meters(kind.width) / 2.0, pixels_to_meters(kind.height) / 2.0)
                 			.collision_groups(InteractionGroups::new(Group::GROUP_10, Group::GROUP_2 | Group::GROUP_10))
+                			.active_events(ActiveEvents::CONTACT_FORCE_EVENTS)
                 			.density(1.0)
                 			.friction(0.01)
                 			.build();
 
                 		physics.colliders.insert_with_parent(collider2, handle2, &mut physics.bodies);
 
-                        commands.spawn((
+                        let entity1 = commands.spawn((
                             Bullet,
                             Position { x: pos1.x, y: pos1.y },
                             Size     { width: kind.width, height: kind.height },
@@ -275,9 +304,9 @@ pub fn shooting(
                             Sprite   { key: String::from("bullet-a") },
                             Handle   { handle: Some(handle1) },
                             rotation.clone()
-                        ));
+                        )).id();
 
-                        commands.spawn((
+                        let entity2 = commands.spawn((
                             Bullet,
                             Position { x: pos2.x, y: pos2.y },
                             Size     { width: kind.width, height: kind.height },
@@ -285,13 +314,15 @@ pub fn shooting(
                             Sprite   { key: String::from("bullet-a") },
                             Handle   { handle: Some(handle2) },
                             rotation.clone()
-                        ));
+                        )).id();
 
                         if let Some(body1) = physics.bodies.get_mut(handle1) {
+                            body1.user_data = entity1.to_bits() as u128;
                             body1.apply_impulse(impulse, true);
                         }
 
                         if let Some(body2) = physics.bodies.get_mut(handle2) {
+                            body2.user_data = entity2.to_bits() as u128;
                             body2.apply_impulse(impulse, true);
                         }
                     }
@@ -316,6 +347,29 @@ pub fn cleaning(
 
     for (entity, position, size, handle) in &query {
         if states.state == GameState::Playing && is_outside_of_rect(&position, &size, &rect) {
+            if let Some(handle) = handle.handle {
+                let physics = space.physics.deref_mut();
+
+                physics.bodies.remove(
+                    handle,
+                    &mut physics.islands,
+                    &mut physics.colliders,
+                    &mut physics.impulse_joints,
+                    &mut physics.multibody_joints,
+                    true);
+
+                commands.entity(entity).despawn();
+            }
+        }
+    }
+}
+
+pub fn collisions(
+    mut commands: Commands,
+    query: Query<(Entity, &Collision, &Handle, &Position, &Center, Option<&Bullet>)>,
+    mut space: ResMut<Space>) {
+    for (entity, collision, handle, position, center, bullet) in &query {
+        if let Some(bullet) = bullet {
             if let Some(handle) = handle.handle {
                 let physics = space.physics.deref_mut();
 
