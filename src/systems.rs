@@ -1,5 +1,6 @@
 use std::ops::DerefMut;
 use std::time::Instant;
+use std::cmp::max;
 
 use bevy_ecs::prelude::*;
 use macroquad::prelude::*;
@@ -103,8 +104,14 @@ pub fn actions(
                         }
 
                         if actions.actions & Action::Brake == Action::Nothing {
-                            body.set_linear_damping((50.0 - ship.speed as f32) / 10.0);
-                            body.set_angular_damping((50.0 - ship.speed as f32) / 10.0);
+                            let linear_velocity = max(body.linvel().x.abs() as u16, body.linvel().y.abs() as u16) as f32;
+                            let angular_velocity = body.angvel().abs();
+                            // We need to restrict max speed, otherwise ship will move extremely fast and keep accelerating.
+                            let linear_factor = if linear_velocity >= 200.0 { linear_velocity } else { 0.0 };
+                            let angular_factor = if angular_velocity >= 10.0 { angular_velocity } else { 0.0 };
+                            
+                            body.set_linear_damping((50.0 + linear_factor - ship.speed as f32) / 10.0);
+                            body.set_angular_damping((50.0 + angular_factor - ship.speed as f32) / 10.0);
                         }
 
                         ship.tracing = actions.actions & (
@@ -380,7 +387,7 @@ pub fn cleaning(
             y: states.position.y - screen_height() / 2.0 * factor,
             width: screen_width() * factor,
             height: screen_height() * factor };
-// draw_rectangle(rect.x + 5.0, rect.y + 5.0, rect.width - 10.0, rect.height - 10.0, WHITE);
+        
         for (entity, position, size, handle) in &query {
             if is_outside_of_rect(&position, &size, &rect) {
                 if let Some(handle) = handle.handle {
