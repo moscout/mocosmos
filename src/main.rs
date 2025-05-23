@@ -33,10 +33,6 @@ async fn main() -> Result<(), macroquad::Error> {
 
     load_resources(app.world_mut()).await.expect("resources loading error");
     
-    set_camera(&Camera2D {
-        zoom: vec2(1.0 / screen_width(), 1.0 / screen_height()) * 2.0,
-        ..Camera2D::default() });
-
     loop {
         clear_background(BLACK);
         

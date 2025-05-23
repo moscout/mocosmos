@@ -24,28 +24,41 @@ pub fn control(mut query: Query<&mut Actions, With<Player>>, states: Res<GameSta
                 if is_key_pressed(KeyCode::Key1)      { actions.actions |= Action::OneBullet; }
                 else if is_key_pressed(KeyCode::Key2) { actions.actions |= Action::TwoBullets; }
 
-                if is_key_down(KeyCode::A)     { actions.actions |= Action::MoveLeft }
-                if is_key_down(KeyCode::D)     { actions.actions |= Action::MoveRight }
-                if is_key_down(KeyCode::Up)    { actions.actions |= Action::MoveForward }
-                if is_key_down(KeyCode::Down)  { actions.actions |= Action::MoveBackward }
-                if is_key_down(KeyCode::Left)  { actions.actions |= Action::TurnLeft }
-                if is_key_down(KeyCode::Right) { actions.actions |= Action::TurnRight }
+                if is_key_down(KeyCode::A)     { actions.actions |= Action::MoveLeft; }
+                if is_key_down(KeyCode::D)     { actions.actions |= Action::MoveRight; }
+                if is_key_down(KeyCode::Up)    { actions.actions |= Action::MoveForward; }
+                if is_key_down(KeyCode::Down)  { actions.actions |= Action::MoveBackward; }
+                if is_key_down(KeyCode::Left)  { actions.actions |= Action::TurnLeft; }
+                if is_key_down(KeyCode::Right) { actions.actions |= Action::TurnRight; }
 
-                if is_key_pressed(KeyCode::Minus)      { actions.actions |= Action::MinimizeSpeed }
-                else if is_key_pressed(KeyCode::Equal) { actions.actions |= Action::MaximizeSpeed }
+                if is_key_pressed(KeyCode::Minus)      { actions.actions |= Action::MinimizeSpeed; }
+                else if is_key_pressed(KeyCode::Equal) { actions.actions |= Action::MaximizeSpeed; }
 
-                if is_key_down(KeyCode::Q)      { actions.actions |= Action::DecreaseSpeed }
-                else if is_key_down(KeyCode::E) { actions.actions |= Action::IncreaseSpeed }
+                if is_key_down(KeyCode::Q)      { actions.actions |= Action::DecreaseSpeed; }
+                else if is_key_down(KeyCode::E) { actions.actions |= Action::IncreaseSpeed; }
 
-                if is_key_down(KeyCode::Space) { actions.actions |= Action::Brake }
-                if is_key_down(KeyCode::W)     { actions.actions |= Action::Shoot }
+                if is_key_down(KeyCode::Space) { actions.actions |= Action::Brake; }
+                if is_key_down(KeyCode::W)     { actions.actions |= Action::Shoot; }
+
+                if is_key_down(KeyCode::LeftControl) {
+                    if is_key_down(KeyCode::I) && states.scaled.elapsed().as_millis() >= 100 { actions.actions |= Action::ZoomIn; }
+                    if is_key_down(KeyCode::O) && states.scaled.elapsed().as_millis() >= 100 { actions.actions |= Action::ZoomOut; }
+
+                    if is_key_pressed(KeyCode::F) {
+                        if states.fullscreen { actions.actions |= Action::FullscreenOff; }
+                        else { actions.actions |= Action::FullscreenOn; }
+                    }
+                }
             },
             _ => {}
         }
     }
 }
 
-pub fn actions(mut query: Query<(&Handle, &Actions, &mut Weapon, &mut Ship), With<Player>>, mut space: ResMut<Space>, states: Res<GameStates>) {
+pub fn actions(
+    mut query: Query<(&Handle, &Actions, &mut Weapon, &mut Ship), With<Player>>,
+    mut space: ResMut<Space>,
+    mut states: ResMut<GameStates>) {
     for (handle, actions, mut weapon, mut ship) in &mut query {
         match states.state {
             GameState::Playing => {
@@ -81,7 +94,10 @@ pub fn actions(mut query: Query<(&Handle, &Actions, &mut Weapon, &mut Ship), Wit
                                     if linear_damping < 100.0 { body.set_linear_damping(linear_damping * 1.2 + 0.5); }
                                     if angular_damping < 100.0 { body.set_angular_damping(angular_damping * 1.2 + 0.5); }
                                 },
-                                Action::Shoot => {},
+                                Action::ZoomIn => if states.zoom < 2.0 { states.zoom += 0.1; states.scaled = Instant::now(); },
+                                Action::ZoomOut => if states.zoom > 1.0 { states.zoom -= 0.1; states.scaled = Instant::now(); },
+                                Action::FullscreenOn => { set_fullscreen(true); states.fullscreen = true; },
+                                Action::FullscreenOff => { set_fullscreen(false); states.fullscreen = false; },
                                 _ => ()
                             }
                         }
@@ -152,8 +168,11 @@ pub fn physics(mut commands: Commands, mut space: ResMut<Space>, states: Res<Gam
     }
 }
 
-pub fn transformation(mut query: Query<(&Handle, &mut Position, &mut Rot, &Center)>, space: Res<Space>, states: Res<GameStates>) {
-    for (handle, mut position, mut rotation, center) in &mut query {
+pub fn transformation(
+    mut query: Query<(&Handle, &mut Position, &mut Rot, &Center, Option<&Player>)>,
+    space: Res<Space>,
+    mut states: ResMut<GameStates>) {
+    for (handle, mut position, mut rotation, center, player) in &mut query {
         match states.state {
             GameState::Playing => {
                 if let Some(handle) = handle.handle {
@@ -162,6 +181,10 @@ pub fn transformation(mut query: Query<(&Handle, &mut Position, &mut Rot, &Cente
                         position.y = meters_to_pixels(body.translation().y) - center.cy;
                         rotation.rotation = body.rotation().clone();
                         rotation.angle = body.rotation().angle();
+
+                        if let Some(player) = player {
+                            states.position = Position { x: position.x + center.cx, y: position.y + center.cy };
+                        }
                     }
                 }
             },
@@ -177,6 +200,12 @@ pub fn draw(
     for (position, rotation, sprite, center, ship) in &query {
         match states.state {
             GameState::Playing => {
+                // We need to set camera with current zoom and in current position.
+                set_camera(&Camera2D {
+                    zoom: vec2(1.0 / screen_width(), 1.0 / screen_height()) * states.zoom,
+                    target: vec2(states.position.x, states.position.y),
+                    ..Camera2D::default() });
+                
     			if let Some(kind) = sprites.kinds.get(&sprite.key) {
     			    if let Some(texture) = &kind.texture {
         			    draw_texture_ex(texture, position.x, position.y, WHITE,
@@ -345,12 +374,13 @@ pub fn cleaning(
     states: Res<GameStates>,
     mut space: ResMut<Space>) {
     if states.state == GameState::Playing {
+        let factor = 3.0 - states.zoom;
         let rect = Rectangle {
-            x: -(screen_width() / 2.0) * 2.0,
-            y: -(screen_height() / 2.0) * 2.0,
-            width: screen_width() * 2.0,
-            height: screen_height() * 2.0 };
-
+            x: states.position.x - screen_width() / 2.0 * factor,
+            y: states.position.y - screen_height() / 2.0 * factor,
+            width: screen_width() * factor,
+            height: screen_height() * factor };
+// draw_rectangle(rect.x + 5.0, rect.y + 5.0, rect.width - 10.0, rect.height - 10.0, WHITE);
         for (entity, position, size, handle) in &query {
             if is_outside_of_rect(&position, &size, &rect) {
                 if let Some(handle) = handle.handle {
