@@ -54,3 +54,6 @@ insert into sprite (key, file_name, label) values ('trace-a-wide', 'trace-a-wide
 insert into sprite (key, file_name, label) values ('trace-b-wide', 'trace-b-wide.png', '');
 insert into sprite (key, file_name, label) values ('trace-c-wide', 'trace-c-wide.png', '');
 insert into sprite (key, file_name, label) values ('bullet-a', 'bullet-a.png', '');
+insert into sprite (key, file_name, label) values ('spark-a-0', 'spark-a-0.png', '');
+insert into sprite (key, file_name, label) values ('spark-a-1', 'spark-a-1.png', '');
+insert into sprite (key, file_name, label) values ('spark-a-2', 'spark-a-2.png', '');

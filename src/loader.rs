@@ -115,4 +115,52 @@ pub fn load_world(mut commands: Commands, sprites: Res<SpriteKinds>) {
 			Handle   { handle: None }
 		));
 	}
+
+	if let Some(kind) = sprites.kinds.get("asteroid-a-grey-big") {
+		commands.spawn((
+			Asteroid,
+			Position { x: -200.0, y: -200.0 },
+			Rotation { angle: 0.0, rotation: UnitComplex::new(0.0) },
+			Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
+			Size     { width: kind.width, height: kind.height },
+			Sprite   { key: String::from("asteroid-a-grey-big") },
+			Handle   { handle: None }
+		));
+	}
+
+	if let Some(kind) = sprites.kinds.get("asteroid-a-brown-small") {
+		commands.spawn((
+			Asteroid,
+			Position { x: 200.0, y: -200.0 },
+			Rotation { angle: 0.0, rotation: UnitComplex::new(0.0) },
+			Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
+			Size     { width: kind.width, height: kind.height },
+			Sprite   { key: String::from("asteroid-a-brown-small") },
+			Handle   { handle: None }
+		));
+	}
+
+	if let Some(kind) = sprites.kinds.get("asteroid-c-brown-big") {
+		commands.spawn((
+			Asteroid,
+			Position { x: -200.0, y: 200.0 },
+			Rotation { angle: 0.0, rotation: UnitComplex::new(0.0) },
+			Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
+			Size     { width: kind.width, height: kind.height },
+			Sprite   { key: String::from("asteroid-c-brown-big") },
+			Handle   { handle: None }
+		));
+	}
+		
+	if let Some(kind) = sprites.kinds.get("asteroid-b-brown-tiny") {
+		commands.spawn((
+			Asteroid,
+			Position { x: 200.0, y: 200.0 },
+			Rotation { angle: 0.0, rotation: UnitComplex::new(0.0) },
+			Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
+			Size     { width: kind.width, height: kind.height },
+			Sprite   { key: String::from("asteroid-b-brown-tiny") },
+			Handle   { handle: None }
+		));
+	}
 }

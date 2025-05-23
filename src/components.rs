@@ -112,6 +112,9 @@ pub struct Asteroid;
 #[derive(Component)]
 pub struct Bullet;
 
+#[derive(Component)]
+pub struct Spark;
+
 #[derive(Component, Debug)]
 pub struct Position {
 	pub x: f32,
@@ -167,4 +170,12 @@ pub struct Actions {
 #[derive(Component)]
 pub struct Collision {
 	pub entity: Entity
+}
+
+#[derive(Component)]
+pub struct Animation {
+	pub frame: u8,
+	pub speed: u8,
+	pub count: u8,
+	pub keys: Vec<String>
 }

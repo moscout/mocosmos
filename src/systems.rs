@@ -170,7 +170,10 @@ pub fn transformation(mut query: Query<(&Handle, &mut Position, &mut Rot, &Cente
     }
 }
 
-pub fn draw(query: Query<(&Position, &Rot, &Sprite, &Center, Option<&Ship>)>, sprites: Res<SpriteKinds>, states: Res<GameStates>) {
+pub fn draw(
+    query: Query<(&Position, &Rot, &Sprite, &Center, Option<&Ship>)>,
+    sprites: Res<SpriteKinds>,
+    states: Res<GameStates>) {
     for (position, rotation, sprite, center, ship) in &query {
         match states.state {
             GameState::Playing => {
@@ -214,121 +217,123 @@ pub fn shooting(
     states: Res<GameStates>,
     sprites: Res<SpriteKinds>,
     mut space: ResMut<Space>) {
-    for (position, center, rotation, size, mut weapon, actions) in &mut query {
-        if states.state == GameState::Playing && actions.actions & Action::Shoot != Action::Nothing && weapon.shot.elapsed().as_millis() >= 100 {
-            if let Some(kind) = sprites.kinds.get(&String::from("bullet-a")) {
-                match weapon.kind {
-                    WeaponKind::OneBullet => {
-                        let physics = space.physics.deref_mut();
-                        let impulse = rotation.rotation.transform_vector(&vector![0.0, -20.0]);
+    if states.state == GameState::Playing {
+        for (position, center, rotation, size, mut weapon, actions) in &mut query {
+            if actions.actions & Action::Shoot != Action::Nothing && weapon.shot.elapsed().as_millis() >= 100 {
+                if let Some(kind) = sprites.kinds.get(&String::from("bullet-a")) {
+                    match weapon.kind {
+                        WeaponKind::OneBullet => {
+                            let physics = space.physics.deref_mut();
+                            let impulse = rotation.rotation.transform_vector(&vector![0.0, -20.0]);
 
-                        let pos = rotate_point(&Point2::new(position.x + center.cx - kind.width / 2.0, position.y - kind.height),
-                            position.x + center.cx, position.y + center.cy, rotation.angle);
+                            let pos = rotate_point(&Point2::new(position.x + center.cx - kind.width / 2.0, position.y - kind.height),
+                                position.x + center.cx, position.y + center.cy, rotation.angle);
 
-                		let body = RigidBodyBuilder::new(RigidBodyType::Dynamic)
-                			.translation(vector![pixels_to_meters(pos.x + kind.width / 2.0), pixels_to_meters(pos.y + kind.height / 2.0)])
-                			.rotation(rotation.angle)
-                			.ccd_enabled(true)
-                			.build();
-                		let handle = physics.bodies.insert(body);
-                		let collider = ColliderBuilder::cuboid(pixels_to_meters(kind.width) / 2.0, pixels_to_meters(kind.height) / 2.0)
-                			.collision_groups(InteractionGroups::new(Group::GROUP_10, Group::GROUP_2 | Group::GROUP_10))
-                			.active_events(ActiveEvents::CONTACT_FORCE_EVENTS)
-                			.density(1.0)
-                			.friction(0.01)
-                			.build();
+                    		let body = RigidBodyBuilder::new(RigidBodyType::Dynamic)
+                    			.translation(vector![pixels_to_meters(pos.x + kind.width / 2.0), pixels_to_meters(pos.y + kind.height / 2.0)])
+                    			.rotation(rotation.angle)
+                    			.ccd_enabled(true)
+                    			.build();
+                    		let handle = physics.bodies.insert(body);
+                    		let collider = ColliderBuilder::cuboid(pixels_to_meters(kind.width) / 2.0, pixels_to_meters(kind.height) / 2.0)
+                    			.collision_groups(InteractionGroups::new(Group::GROUP_10, Group::GROUP_2 | Group::GROUP_10))
+                    			.active_events(ActiveEvents::CONTACT_FORCE_EVENTS)
+                    			.density(1.0)
+                    			.friction(0.01)
+                    			.build();
 
-                		physics.colliders.insert_with_parent(collider, handle, &mut physics.bodies);
+                    		physics.colliders.insert_with_parent(collider, handle, &mut physics.bodies);
 
-                        let entity = commands.spawn((
-                            Bullet,
-                            Position { x: pos.x, y: pos.y },
-                            Size     { width: kind.width, height: kind.height },
-                            Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
-                            Sprite   { key: String::from("bullet-a") },
-                            Handle   { handle: Some(handle) },
-                            rotation.clone()
-                        )).id();
+                            let entity = commands.spawn((
+                                Bullet,
+                                Position { x: pos.x, y: pos.y },
+                                Size     { width: kind.width, height: kind.height },
+                                Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
+                                Sprite   { key: String::from("bullet-a") },
+                                Handle   { handle: Some(handle) },
+                                rotation.clone()
+                            )).id();
 
-                        if let Some(body) = physics.bodies.get_mut(handle) {
-                            body.user_data = entity.to_bits() as u128;
-                            body.apply_impulse(impulse, true);
-                        }
-                    },
+                            if let Some(body) = physics.bodies.get_mut(handle) {
+                                body.user_data = entity.to_bits() as u128;
+                                body.apply_impulse(impulse, true);
+                            }
+                        },
 
-                    WeaponKind::TwoBullets => {
-                        let physics = space.physics.deref_mut();
-                        let impulse = rotation.rotation.transform_vector(&vector![0.0, -20.0]);
+                        WeaponKind::TwoBullets => {
+                            let physics = space.physics.deref_mut();
+                            let impulse = rotation.rotation.transform_vector(&vector![0.0, -20.0]);
                         
-                        let dx = size.width / 3.0;
-                        let pos1 = rotate_point(&Point2::new(position.x + dx - kind.width / 2.0, position.y - kind.height),
-                            position.x + center.cx, position.y + center.cy, rotation.angle);
-                        let pos2 = rotate_point(&Point2::new(position.x + 2.0 * dx - kind.width / 2.0, position.y - kind.height),
-                            position.x + center.cx, position.y + center.cy, rotation.angle);
+                            let dx = size.width / 3.0;
+                            let pos1 = rotate_point(&Point2::new(position.x + dx - kind.width / 2.0, position.y - kind.height),
+                                position.x + center.cx, position.y + center.cy, rotation.angle);
+                            let pos2 = rotate_point(&Point2::new(position.x + 2.0 * dx - kind.width / 2.0, position.y - kind.height),
+                                position.x + center.cx, position.y + center.cy, rotation.angle);
 
-                		let body1 = RigidBodyBuilder::new(RigidBodyType::Dynamic)
-                			.translation(vector![pixels_to_meters(pos1.x + kind.width / 2.0), pixels_to_meters(pos1.y + kind.height / 2.0)])
-                			.rotation(rotation.angle)
-                			.ccd_enabled(true)
-                			.build();
-                		let handle1 = physics.bodies.insert(body1);
-                		let collider1 = ColliderBuilder::cuboid(pixels_to_meters(kind.width) / 2.0, pixels_to_meters(kind.height) / 2.0)
-                			.collision_groups(InteractionGroups::new(Group::GROUP_10, Group::GROUP_2 | Group::GROUP_10))
-                			.active_events(ActiveEvents::CONTACT_FORCE_EVENTS)
-                			.density(1.0)
-                			.friction(0.01)
-                			.build();
+                    		let body1 = RigidBodyBuilder::new(RigidBodyType::Dynamic)
+                    			.translation(vector![pixels_to_meters(pos1.x + kind.width / 2.0), pixels_to_meters(pos1.y + kind.height / 2.0)])
+                    			.rotation(rotation.angle)
+                    			.ccd_enabled(true)
+                    			.build();
+                    		let handle1 = physics.bodies.insert(body1);
+                    		let collider1 = ColliderBuilder::cuboid(pixels_to_meters(kind.width) / 2.0, pixels_to_meters(kind.height) / 2.0)
+                    			.collision_groups(InteractionGroups::new(Group::GROUP_10, Group::GROUP_2 | Group::GROUP_10))
+                    			.active_events(ActiveEvents::CONTACT_FORCE_EVENTS)
+                    			.density(1.0)
+                    			.friction(0.01)
+                    			.build();
 
-                		physics.colliders.insert_with_parent(collider1, handle1, &mut physics.bodies);
+                    		physics.colliders.insert_with_parent(collider1, handle1, &mut physics.bodies);
 
-                		let body2 = RigidBodyBuilder::new(RigidBodyType::Dynamic)
-                			.translation(vector![pixels_to_meters(pos2.x + kind.width / 2.0), pixels_to_meters(pos2.y + kind.height / 2.0)])
-                			.rotation(rotation.angle)
-                			.ccd_enabled(true)
-                			.build();
-                		let handle2 = physics.bodies.insert(body2);
-                		let collider2 = ColliderBuilder::cuboid(pixels_to_meters(kind.width) / 2.0, pixels_to_meters(kind.height) / 2.0)
-                			.collision_groups(InteractionGroups::new(Group::GROUP_10, Group::GROUP_2 | Group::GROUP_10))
-                			.active_events(ActiveEvents::CONTACT_FORCE_EVENTS)
-                			.density(1.0)
-                			.friction(0.01)
-                			.build();
+                    		let body2 = RigidBodyBuilder::new(RigidBodyType::Dynamic)
+                    			.translation(vector![pixels_to_meters(pos2.x + kind.width / 2.0), pixels_to_meters(pos2.y + kind.height / 2.0)])
+                    			.rotation(rotation.angle)
+                    			.ccd_enabled(true)
+                    			.build();
+                    		let handle2 = physics.bodies.insert(body2);
+                    		let collider2 = ColliderBuilder::cuboid(pixels_to_meters(kind.width) / 2.0, pixels_to_meters(kind.height) / 2.0)
+                    			.collision_groups(InteractionGroups::new(Group::GROUP_10, Group::GROUP_2 | Group::GROUP_10))
+                    			.active_events(ActiveEvents::CONTACT_FORCE_EVENTS)
+                    			.density(1.0)
+                    			.friction(0.01)
+                    			.build();
 
-                		physics.colliders.insert_with_parent(collider2, handle2, &mut physics.bodies);
+                    		physics.colliders.insert_with_parent(collider2, handle2, &mut physics.bodies);
 
-                        let entity1 = commands.spawn((
-                            Bullet,
-                            Position { x: pos1.x, y: pos1.y },
-                            Size     { width: kind.width, height: kind.height },
-                            Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
-                            Sprite   { key: String::from("bullet-a") },
-                            Handle   { handle: Some(handle1) },
-                            rotation.clone()
-                        )).id();
+                            let entity1 = commands.spawn((
+                                Bullet,
+                                Position { x: pos1.x, y: pos1.y },
+                                Size     { width: kind.width, height: kind.height },
+                                Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
+                                Sprite   { key: String::from("bullet-a") },
+                                Handle   { handle: Some(handle1) },
+                                rotation.clone()
+                            )).id();
 
-                        let entity2 = commands.spawn((
-                            Bullet,
-                            Position { x: pos2.x, y: pos2.y },
-                            Size     { width: kind.width, height: kind.height },
-                            Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
-                            Sprite   { key: String::from("bullet-a") },
-                            Handle   { handle: Some(handle2) },
-                            rotation.clone()
-                        )).id();
+                            let entity2 = commands.spawn((
+                                Bullet,
+                                Position { x: pos2.x, y: pos2.y },
+                                Size     { width: kind.width, height: kind.height },
+                                Center   { cx: kind.width / 2.0, cy: kind.height / 2.0 },
+                                Sprite   { key: String::from("bullet-a") },
+                                Handle   { handle: Some(handle2) },
+                                rotation.clone()
+                            )).id();
 
-                        if let Some(body1) = physics.bodies.get_mut(handle1) {
-                            body1.user_data = entity1.to_bits() as u128;
-                            body1.apply_impulse(impulse, true);
-                        }
+                            if let Some(body1) = physics.bodies.get_mut(handle1) {
+                                body1.user_data = entity1.to_bits() as u128;
+                                body1.apply_impulse(impulse, true);
+                            }
 
-                        if let Some(body2) = physics.bodies.get_mut(handle2) {
-                            body2.user_data = entity2.to_bits() as u128;
-                            body2.apply_impulse(impulse, true);
+                            if let Some(body2) = physics.bodies.get_mut(handle2) {
+                                body2.user_data = entity2.to_bits() as u128;
+                                body2.apply_impulse(impulse, true);
+                            }
                         }
                     }
-                }
 
-                weapon.shot = Instant::now();
+                    weapon.shot = Instant::now();
+                }
             }
         }
     }
@@ -339,26 +344,28 @@ pub fn cleaning(
     mut commands: Commands,
     states: Res<GameStates>,
     mut space: ResMut<Space>) {
-    let rect = Rectangle {
-        x: -(screen_width() / 2.0) * 2.0,
-        y: -(screen_height() / 2.0) * 2.0,
-        width: screen_width() * 2.0,
-        height: screen_height() * 2.0 };
+    if states.state == GameState::Playing {
+        let rect = Rectangle {
+            x: -(screen_width() / 2.0) * 2.0,
+            y: -(screen_height() / 2.0) * 2.0,
+            width: screen_width() * 2.0,
+            height: screen_height() * 2.0 };
 
-    for (entity, position, size, handle) in &query {
-        if states.state == GameState::Playing && is_outside_of_rect(&position, &size, &rect) {
-            if let Some(handle) = handle.handle {
-                let physics = space.physics.deref_mut();
+        for (entity, position, size, handle) in &query {
+            if is_outside_of_rect(&position, &size, &rect) {
+                if let Some(handle) = handle.handle {
+                    let physics = space.physics.deref_mut();
 
-                physics.bodies.remove(
-                    handle,
-                    &mut physics.islands,
-                    &mut physics.colliders,
-                    &mut physics.impulse_joints,
-                    &mut physics.multibody_joints,
-                    true);
+                    physics.bodies.remove(
+                        handle,
+                        &mut physics.islands,
+                        &mut physics.colliders,
+                        &mut physics.impulse_joints,
+                        &mut physics.multibody_joints,
+                        true);
 
-                commands.entity(entity).despawn();
+                    commands.entity(entity).despawn();
+                }
             }
         }
     }
@@ -367,21 +374,58 @@ pub fn cleaning(
 pub fn collisions(
     mut commands: Commands,
     query: Query<(Entity, &Collision, &Handle, &Position, &Center, Option<&Bullet>)>,
+    states: Res<GameStates>,
     mut space: ResMut<Space>) {
-    for (entity, collision, handle, position, center, bullet) in &query {
-        if let Some(bullet) = bullet {
-            if let Some(handle) = handle.handle {
-                let physics = space.physics.deref_mut();
+    if states.state == GameState::Playing {
+        for (entity, collision, handle, position, center, bullet) in &query {
+            if let Some(bullet) = bullet {
+                if let Some(handle) = handle.handle {
+                    let physics = space.physics.deref_mut();
 
-                physics.bodies.remove(
-                    handle,
-                    &mut physics.islands,
-                    &mut physics.colliders,
-                    &mut physics.impulse_joints,
-                    &mut physics.multibody_joints,
-                    true);
+                    physics.bodies.remove(
+                        handle,
+                        &mut physics.islands,
+                        &mut physics.colliders,
+                        &mut physics.impulse_joints,
+                        &mut physics.multibody_joints,
+                        true);
 
+                    commands.entity(entity).despawn();
+
+                    commands.spawn((
+                        Spark,
+                        Position  { x: position.x + center.cx, y: position.y + center.cy },
+                        Animation { frame: 0, speed: 3, count: 3, keys: vec![String::from("spark-a-0"), String::from("spark-a-1"), String::from("spark-a-2")] }
+                    ));
+                }
+            }
+        }
+    }
+}
+
+pub fn effects(
+    mut commands: Commands,
+    states: Res<GameStates>,
+    sprites: Res<SpriteKinds>,
+    mut query: Query<(Entity, &Position, &mut Animation), With<Spark>>) {
+    if states.state == GameState::Playing {
+        for (entity, position, mut animation) in &mut query {
+            animation.frame += 1;
+
+            if animation.frame == animation.count * animation.speed {
                 commands.entity(entity).despawn();
+            } else {
+                let key = &animation.keys[(animation.frame / animation.speed) as usize];
+                
+    			if let Some(kind) = sprites.kinds.get(key) {
+    			    if let Some(texture) = &kind.texture {
+        			    draw_texture(
+        			        texture,
+        			        position.x - kind.width / 2.0,
+        			        position.y - kind.height / 2.0,
+        			        WHITE);
+        		    }
+    			}
             }
         }
     }
