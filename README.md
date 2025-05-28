@@ -2,7 +2,7 @@ This is a simple space game.\
 I am making it in my spare time for fun and learning.\
 Feel free to use it as template for your own things.\
 \
-![Screenshot](screen.png)
+![Screenshot](screen.png)\
 \
 Implemented features:\
 ~ Moving forward, backward, left, right, angular.\
