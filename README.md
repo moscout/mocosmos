@@ -37,6 +37,4 @@ Control keys:\
 ~ W        - Shoot.\
 ~ Ctrl+I   - Zoom in.\
 ~ Ctrl+O   - Zoom out.\
-~ Ctrl+F   - Fullscreen on/off.\
-\
-[![Hits](https://hits.sh/git.sr.ht/~modevstudio/mocosmos.svg)](https://hits.sh/git.sr.ht/~modevstudio/mocosmos/)
+~ Ctrl+F   - Fullscreen on/off.
