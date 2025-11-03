@@ -39,5 +39,5 @@ Control keys:\
 ~ Ctrl+O   - Zoom out.\
 ~ Ctrl+F   - Fullscreen on/off.
 
-[![Hits](https://hits.sh/sr.ht/~modevstudio/mocosmos.svg)](https://hits.sh/sr.ht/~modevstudio/mocosmos/) |
+[![Hits](https://hits.sh/sr.ht/~modevstudio/mocosmos.svg)](https://hits.sh/sr.ht/~modevstudio/mocosmos/) 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/L3L81NPOT7)
