@@ -40,5 +40,3 @@ Control keys:\
 ~ Ctrl+F   - Fullscreen on/off.
 
 [![Hits](https://hits.sh/sr.ht/~modevstudio/mocosmos.svg)](https://hits.sh/sr.ht/~modevstudio/mocosmos/) 
-[![Liberapay](https://img.shields.io/liberapay/patrons/modev.svg?logo=liberapay)](https://liberapay.com/modev/donate)
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/L3L81NPOT7)
