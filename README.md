@@ -20,23 +20,25 @@ Made with:\
 ~ ECS      - [bevy_ecs](https://docs.rs/bevy_ecs/latest/bevy_ecs).\
 ~ Lang     - [rust](https://www.rust-lang.org).\
 \
-Control keys:\
-~ 1        - Change weapon to one bullet.\
-~ 2        - Change weapon to two bullets.\
-~ A        - Move left.\
-~ D        - Move right.\
-~ Up       - Move forward.\
-~ Down     - Move backward.\
-~ Left     - Turn left.\
-~ Right    - Turn right.\
-~ Minus    - Minimize speed.\
-~ Plus(=)  - Maximize speed.\
-~ Q        - Decrease speed (slowly).\
-~ E        - Increase speed (slowly).\
-~ Space    - Brake (extreme).\
-~ W        - Shoot.\
-~ Ctrl+I   - Zoom in.\
-~ Ctrl+O   - Zoom out.\
-~ Ctrl+F   - Fullscreen on/off.
+Control keys:
+| Key      | Description                   |
+|----------|-------------------------------|
+| 1        | Change weapon to one bullet.  |
+| 2        | Change weapon to two bullets. |
+| A        | Move left.                    |
+| D        | Move right.                   |
+| Up       | Move forward.                 |
+| Down     | Move backward.                |
+| Left     | Turn left.                    |
+| Right    | Turn right.                   |
+| Minus    | Minimize speed.               |
+| Plus(=)  | Maximize speed.               |
+| Q        | Decrease speed (slowly).      |
+| E        | Increase speed (slowly).      |
+| Space    | Brake (extreme).              |
+| W        | Shoot.                        |
+| Ctrl+I   | Zoom in.                      |
+| Ctrl+O   | Zoom out.                     |
+| Ctrl+F   | Full-screen on/off.           |
 
 [![Hits](https://hits.sh/sr.ht/~modevstudio/mocosmos.svg)](https://hits.sh/sr.ht/~modevstudio/mocosmos/) 
