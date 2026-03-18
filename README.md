@@ -40,5 +40,3 @@ Control keys:
 | Ctrl+I   | Zoom in.                      |
 | Ctrl+O   | Zoom out.                     |
 | Ctrl+F   | Full-screen on/off.           |
-
-[![Hits](https://hits.sh/sr.ht/~modevstudio/mocosmos.svg)](https://hits.sh/sr.ht/~modevstudio/mocosmos/) 
